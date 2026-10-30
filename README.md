@@ -9,8 +9,8 @@
 Unlike purely subjective vision-only estimation, **Image2Skill** combines **3 deterministic engines**:
 
 1. **Mathematical Pixel Extraction (`scripts/extract_palette.py`):** Analyzes the image via Python (Pillow) to extract exact HEX/RGB codes, color dominance percentages, and real WCAG AA/AAA contrast ratios.
-2. **Hybrid URL + Screenshot Mode (`agent-browser` + `scripts/extract_dom_styles.js`):** When a URL or recognizable web app is identified, inspects the live rendered DOM to capture `:root` CSS custom properties, exact font families, grid templates, shadows, border radii, and literal `<svg>` icon vectors (Zero-Unicode Rule).
-3. **Self-Healing Visual Validation (`agent-browser`):** Renders the generated `preview.html` in a headless browser, runs an accessibility (`a11y`) audit, captures a validation screenshot, and compares it against the original reference before completing the task.
+2. **Hybrid URL + Screenshot Mode (`agent-browser` + `scripts/extract_dom_styles.js`):** When a URL or recognizable web app is identified, inspects the live rendered DOM to capture CSS custom properties per theme (light and dark, including tokens inside `@layer` and `@media`), exact font families, grid templates, shadows, border radii, and literal `<svg>` icon vectors (Zero-Unicode Rule).
+3. **Self-Healing Visual Validation (`agent-browser`):** Renders the generated `preview.html` in a headless browser in each theme and at mobile width, runs an accessibility (`a11y`) audit, checks focus, interactions, label consistency and white-label text, and compares it against the original reference before completing the task.
 
 ---
 
@@ -37,6 +37,7 @@ git clone https://github.com/Fredson-Santos/image2skill.git ~/.gemini/config/ski
 
 - **Python 3.8+** with `Pillow` installed (`pip install Pillow`) for the mathematical palette extractor (`scripts/extract_palette.py`).
 - **`agent-browser`** (optional, recommended for Hybrid URL+Screenshot DOM extraction and self-healing `preview.html` visual validation).
+- **bash/zsh or PowerShell:** every command in the skill is documented for both shells, so it works on macOS, Linux, WSL, and Windows.
 
 ---
 

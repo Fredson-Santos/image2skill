@@ -21,30 +21,55 @@
     return a < 1 ? `${hex} (alpha: ${a})` : hex;
   };
 
-  // 1. Extract CSS custom properties (:root and html/body/.dark)
-  const rootVars = {};
-  try {
-    const htmlCs = window.getComputedStyle(document.documentElement);
-    for (const sheet of Array.from(document.styleSheets)) {
-      try {
-        for (const rule of Array.from(sheet.cssRules || [])) {
-          if (
-            rule.selectorText &&
-            (rule.selectorText.includes(':root') ||
-              rule.selectorText.includes('.dark') ||
-              rule.selectorText === 'html' ||
-              rule.selectorText === 'body')
-          ) {
-            for (const prop of Array.from(rule.style || [])) {
-              if (prop.startsWith('--')) {
-                rootVars[prop] = htmlCs.getPropertyValue(prop).trim() || rule.style.getPropertyValue(prop).trim();
-              }
-            }
-          }
-        }
-      } catch (_) {}
+  // 1. Extract CSS custom properties, keeping each theme separate.
+  //    - Values are read from the rule itself (not getComputedStyle), so light and dark
+  //      values do not collapse into whatever theme happens to be active.
+  //    - Grouping rules (@media, @layer, @supports, @container) are walked recursively,
+  //      because Tailwind v4 / shadcn put their tokens inside @layer and @media blocks.
+  const THEME_SELECTOR = /(^|[\s,(])(:root|html|body|\.dark|\.light|\[data-theme[^\]]*\]|\[data-mode[^\]]*\]|\[class[^\]]*dark[^\]]*\])/;
+  const MAX_VARS_PER_CONTEXT = 300;
+  const cssVariables = {}; // { "<at-rule context> <selector>": { "--token": "value" } }
+  const stylesheetReport = { read: 0, skippedCrossOrigin: [] };
+
+  const walkRules = (rules, context) => {
+    for (const rule of Array.from(rules || [])) {
+      if (rule.cssRules && !rule.selectorText) {
+        // Grouping rule: @media, @supports, @layer, @container...
+        let label = '';
+        if (rule.media) label = `@media ${rule.media.mediaText}`;
+        else if (rule.conditionText !== undefined) label = `@${rule.constructor.name.replace(/^CSS|Rule$/g, '').toLowerCase()} ${rule.conditionText}`;
+        else if (rule.name !== undefined) label = `@layer ${rule.name}`;
+        walkRules(rule.cssRules, label ? `${context}${context ? ' ' : ''}${label}` : context);
+        continue;
+      }
+      if (!rule.selectorText || !rule.style || !THEME_SELECTOR.test(rule.selectorText)) continue;
+      const key = `${context}${context ? ' ' : ''}${rule.selectorText}`.trim();
+      for (const prop of Array.from(rule.style)) {
+        if (!prop.startsWith('--')) continue;
+        cssVariables[key] = cssVariables[key] || {};
+        if (Object.keys(cssVariables[key]).length >= MAX_VARS_PER_CONTEXT) break;
+        cssVariables[key][prop] = rule.style.getPropertyValue(prop).trim();
+      }
+      // Nested CSS rules (native CSS nesting)
+      if (rule.cssRules && rule.cssRules.length) walkRules(rule.cssRules, key);
     }
-  } catch (_) {}
+  };
+
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      walkRules(sheet.cssRules, '');
+      stylesheetReport.read += 1;
+    } catch (_) {
+      // Cross-origin stylesheet without CORS: report it instead of failing silently.
+      stylesheetReport.skippedCrossOrigin.push(sheet.href || '(inline)');
+    }
+  }
+
+  const activeTheme = {
+    htmlClass: document.documentElement.className,
+    dataTheme: document.documentElement.getAttribute('data-theme'),
+    prefersDark: window.matchMedia('(prefers-color-scheme: dark)').matches,
+  };
 
   const extractStyle = (el) => {
     if (!el) return null;
@@ -195,8 +220,10 @@
   return {
     url: window.location.href,
     title: document.title,
-    cssVariablesCount: Object.keys(rootVars).length,
-    cssVariablesSample: Object.fromEntries(Object.entries(rootVars).slice(0, 45)),
+    activeTheme,
+    stylesheetReport,
+    cssVariablesCount: Object.values(cssVariables).reduce((n, group) => n + Object.keys(group).length, 0),
+    cssVariables,
     layout,
     typography,
     components,

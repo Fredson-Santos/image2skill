@@ -6,7 +6,7 @@ and high-saturation accent candidates directly from an image or screenshot,
 while computing relative WCAG contrast ratios.
 
 Usage:
-  python .agents/skills/image2skill/scripts/extract_palette.py <image-path> [--json]
+  python3 <skill-dir>/scripts/extract_palette.py <image-path> [--json]
 """
 
 import argparse
@@ -81,12 +81,18 @@ def analyze_image(image_path: str) -> dict:
     img = Image.open(path).convert("RGB")
     orig_w, orig_h = img.size
 
-    # Proportionally resize for fast, accurate pixel sampling
-    max_dim = 480
-    scale = min(1.0, max_dim / max(orig_w, orig_h))
-    sample_w = max(1, int(orig_w * scale))
-    sample_h = max(1, int(orig_h * scale))
-    resized = img.resize((sample_w, sample_h), Image.Resampling.NEAREST)
+    # Analyze at full resolution whenever practical. Downsampling to a small size
+    # drops thin details (1px borders, text, small icons, chart strokes), which then
+    # never show up as palette candidates. Only very large images are reduced, and
+    # NEAREST is kept so no blended, non-existent colors are introduced.
+    max_pixels = 4_000_000
+    if orig_w * orig_h > max_pixels:
+        scale = (max_pixels / (orig_w * orig_h)) ** 0.5
+        sample_w = max(1, int(orig_w * scale))
+        sample_h = max(1, int(orig_h * scale))
+        resized = img.resize((sample_w, sample_h), Image.Resampling.NEAREST)
+    else:
+        resized = img
 
     pixels = list(
         resized.get_flattened_data()
@@ -95,11 +101,19 @@ def analyze_image(image_path: str) -> dict:
     )
     total_pixels = len(pixels)
 
-    # Light quantization (step of 2) to group minor compression artifacts
-    quantized_pixels = [
-        (r - (r % 2), g - (g % 2), b - (b % 2)) for (r, g, b) in pixels
-    ]
-    counter = Counter(quantized_pixels)
+    # Light quantization (step of 2) groups minor compression artifacts, but each group
+    # is reported by its most frequent REAL color. Reporting the quantized key itself
+    # would shift exact values (e.g. #151515 would come out as #141414).
+    exact_counter = Counter(pixels)
+    group_totals: Counter = Counter()
+    group_best: dict = {}
+    for (r, g, b), count in exact_counter.items():
+        key = (r - (r % 2), g - (g % 2), b - (b % 2))
+        group_totals[key] += count
+        best = group_best.get(key)
+        if best is None or count > best[1]:
+            group_best[key] = ((r, g, b), count)
+    counter = Counter({group_best[key][0]: total for key, total in group_totals.items()})
     most_common = counter.most_common(400)
 
     dominant = deduplicate_colors(most_common, total_pixels, min_distance=12.0, limit=12)
