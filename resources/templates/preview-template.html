@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{DISPLAY_NAME}} — Preview & Styleguide</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons fallback para modo apenas-imagem (preferir <svg> literal extraído do DOM quando houver URL) -->
+  <!-- Lucide Icons fallback for image-only mode (prefer literal DOM-extracted <svg> when a URL is available) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,24 +50,24 @@
 </head>
 <body class="min-h-screen antialiased selection:bg-[var(--accent-primary)] selection:text-[var(--accent-primary-fg)]">
 
-  <!-- SEÇÃO 1: RÉPLICA FIEL DA INTERFACE EXTRAÍDA -->
+  <!-- SECTION 1: FAITHFUL REPLICA OF THE EXTRACTED INTERFACE -->
   <main id="interface-replica">
     {{REPLICA_INTERFACE_HTML}}
   </main>
 
-  <!-- SEÇÃO 2: MATRIZ DE TOKENS & COMPONENTES (STYLEGUIDE) -->
+  <!-- SECTION 2: DESIGN SYSTEM TOKEN & COMPONENT MATRIX (STYLEGUIDE) -->
   <section id="styleguide-showcase" class="max-w-7xl mx-auto px-6 py-12 mt-12 border-t border-[var(--border-subtle)]">
     <div class="mb-8">
       <span class="font-mono-tech text-xs uppercase tracking-widest text-[var(--text-muted)]">Design System Matrix</span>
-      <h2 class="text-2xl font-semibold tracking-tight mt-1">Tokens Cromáticos, Tipografia & Componentes</h2>
+      <h2 class="text-2xl font-semibold tracking-tight mt-1">Color Tokens, Typography & Components</h2>
     </div>
 
-    <!-- Swatches de Cores -->
+    <!-- Color Swatches -->
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-10">
       {{COLOR_SWATCHES_HTML}}
     </div>
 
-    <!-- Showcase de Componentes Isolados -->
+    <!-- Isolated Component Showcase -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       {{COMPONENTS_SHOWCASE_HTML}}
     </div>
@@ -80,4 +80,3 @@
   </script>
 </body>
 </html>
-

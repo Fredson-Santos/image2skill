@@ -8,23 +8,23 @@ description: >-
 
 > {{TAGLINE}}
 
-**Tema Base:** {{THEME_TYPE}} (`{{COLOR_CANVAS}}`)  
-**Arquétipo Visual:** {{STYLE_ARCHETYPE}}  
-**Superfícies:** Canvas `{{COLOR_CANVAS}}` | Card `{{COLOR_SURFACE}}` | Elevated `{{COLOR_SURFACE_ELEVATED}}`  
-**Acento Principal:** `{{ACCENT_PRIMARY}}` (Texto de contraste: `{{ACCENT_PRIMARY_FG}}`)  
-**Assinatura Geométrica:** Controles `{{RADIUS_CONTROLS}}px`, Cards `{{RADIUS_CARDS}}px`, Bordas `{{BORDER_STYLE}}`
+**Base Theme:** {{THEME_TYPE}} (`{{COLOR_CANVAS}}`)  
+**Visual Archetype:** {{STYLE_ARCHETYPE}}  
+**Surface Stack:** Canvas `{{COLOR_CANVAS}}` | Card `{{COLOR_SURFACE}}` | Elevated `{{COLOR_SURFACE_ELEVATED}}`  
+**Primary Accent:** `{{ACCENT_PRIMARY}}` (Contrast Foreground: `{{ACCENT_PRIMARY_FG}}`)  
+**Geometric Signature:** Controls `{{RADIUS_CONTROLS}}px`, Cards `{{RADIUS_CARDS}}px`, Borders `{{BORDER_STYLE}}`
 
 ---
 
-## 1. Tokens de Superfícies, Cores & Contraste
+## 1. Surface, Color & Contrast Tokens
 
-Extraídos com precisão matemática dos pixels e estilos computados da referência:
+Mathematically extracted from the reference pixels and computed styles:
 
-| Nome do Token | Valor Hex / RGB | Contraste vs Canvas | Papel / Função na Interface |
+| Token Name | Hex / RGB Value | Contrast vs Canvas | UI Role / Function |
 | :--- | :--- | :--- | :--- |
 {{COLOR_TOKENS_TABLE}}
 
-### 1.1 Paleta Semântica & Visualização de Dados (Charts)
+### 1.1 Semantic & Data Visualization Palette (Charts)
 - **Chart / Data 1:** `{{CHART_1}}`
 - **Chart / Data 2:** `{{CHART_2}}`
 - **Chart / Data 3:** `{{CHART_3}}`
@@ -33,56 +33,56 @@ Extraídos com precisão matemática dos pixels e estilos computados da referên
 
 ---
 
-## 2. Tipografia & Escala Fluida
+## 2. Typography & Fluid Scale
 
-- **Família Sans:** `{{FONT_SANS}}`
-- **Família Mono:** `{{FONT_MONO}}`
-- **Família Display:** `{{FONT_DISPLAY}}`
-- **Diretriz de Tracking:** Títulos display utilizam tracking `{{TRACKING_DISPLAY}}`, corpo `{{TRACKING_BODY}}` e rótulos mono `{{TRACKING_MONO}}`.
+- **Sans Family:** `{{FONT_SANS}}`
+- **Mono Family:** `{{FONT_MONO}}`
+- **Display Family:** `{{FONT_DISPLAY}}`
+- **Tracking Guideline:** Display headings use `{{TRACKING_DISPLAY}}`, body text uses `{{TRACKING_BODY}}`, and monospace labels use `{{TRACKING_MONO}}`.
 
-### Escala de Texto
-| Papel | Tamanho | Peso | Line-Height | Tracking | Exemplo de Uso |
+### Type Scale
+| Role | Size | Weight | Line-Height | Tracking | Usage Example |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 {{TYPE_SCALE_TABLE}}
 
 ---
 
-## 3. Arquitetura de Layout, Grid, Sombras e Formas
+## 3. Layout Architecture, Grid, Shadows & Shapes
 
-- **Estrutura de Layout (`App Shell`):** {{LAYOUT_STRUCTURE}}
-- **Sistema de Grid & Densidade:** {{GRID_SPEC}} (Base: `{{SPACING_BASE}}px`)
-- **Raio de Controles (Botões/Inputs):** `{{RADIUS_CONTROLS}}px`
-- **Raio de Cards e Contêineres:** `{{RADIUS_CARDS}}px`
-- **Bordas Estruturais:** `{{BORDER_STYLE}}`
-- **Sistema de Elevação / Sombras:** `{{SHADOW_CARD}}`
+- **Layout Structure (`App Shell`):** {{LAYOUT_STRUCTURE}}
+- **Grid System & Density:** {{GRID_SPEC}} (Base unit: `{{SPACING_BASE}}px`)
+- **Control Radius (Buttons/Inputs):** `{{RADIUS_CONTROLS}}px`
+- **Card & Container Radius:** `{{RADIUS_CARDS}}px`
+- **Structural Borders:** `{{BORDER_STYLE}}`
+- **Elevation / Shadow System:** `{{SHADOW_CARD}}`
 
 ---
 
-## 4. Componentes Principais & Micro-interações
+## 4. Core Components & Micro-interactions
 
-Consulte o arquivo [`resources/components.md`](./resources/components.md) para ver a implementação completa em HTML + Tailwind CSS de todos os componentes:
+See [`resources/components.md`](./resources/components.md) for full HTML + Tailwind CSS implementations of all extracted components:
 {{COMPONENTS_SUMMARY_LIST}}
 
 ---
 
-## 5. Diretrizes de Implementação & Brand Neutrality (Regra Inegociável)
+## 5. Implementation Guidelines & Brand Neutrality (Non-Negotiable Rule)
 
 > [!IMPORTANT]
-> **Neutralidade de Marca na Interface (White-Label):**
-> Ao implementar interfaces usando esta skill, **NUNCA injete referências ao nome da skill ou à biblioteca/site de origem** em títulos, logos, badges, kickers, placeholders ou rodapés, a menos que o usuário solicite explicitamente essa marca. A interface gerada deve ser 100% voltada ao produto do usuário ou utilizar marcas fictícias limpas (white-label).
+> **Interface Brand Neutrality (White-Label):**
+> When building interfaces with this skill, **NEVER inject references to the skill name or the source website/library** in titles, logos, badges, kickers, placeholders, or footers unless explicitly requested by the user. Generated interfaces must be 100% tailored to the user's product or use clean white-label branding.
 
-### O que fazer (Do):
-- [x] Mantenha a interface 100% white-label e contextualizada ao negócio do usuário, sem auto-referências à skill.
+### Do:
+- [x] Keep the generated interface 100% white-label and contextualized to the user's domain, without self-referencing the skill.
 {{DOS_LIST}}
 
-### O que NÃO fazer (Don't):
-- [ ] NUNCA adicione o nome da skill ou site de referência em textos, badges de status, logos ou cabeçalhos da interface gerada sem solicitação explícita.
+### Don't:
+- [ ] NEVER add the skill name or reference website name in copy, status badges, logos, or headers without explicit user instruction.
 {{DONTS_LIST}}
 
 ---
 
-## 6. Arquivos e Recursos da Skill
-- [`resources/tokens.css`](./resources/tokens.css): Variáveis CSS completas e `@theme` Tailwind v4.
-- [`resources/tailwind.config.js`](./resources/tailwind.config.js): Configuração Tailwind v3.
-- [`resources/components.md`](./resources/components.md): Catálogo de layout e componentes prontos.
-- [`resources/templates/preview.html`](./resources/templates/preview.html): Réplica fiel e showcase validado visualmente.
+## 6. Skill Files & Resources
+- [`resources/tokens.css`](./resources/tokens.css): Complete CSS custom properties and Tailwind v4 `@theme`.
+- [`resources/tailwind.config.js`](./resources/tailwind.config.js): Tailwind v3 configuration.
+- [`resources/components.md`](./resources/components.md): Ready-to-use layout and component catalog.
+- [`resources/templates/preview.html`](./resources/templates/preview.html): Faithful UI replica and visually validated showcase.

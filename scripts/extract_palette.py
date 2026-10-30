@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 Image2Skill — Exact Pixel Palette & Contrast Extractor
-Extrai matematicamente as cores dominantes (Canvas, Superfícies, Bordas, Textos)
-e cores de acento (alta saturação) diretamente de uma imagem/screenshot,
-além de calcular o contraste WCAG relativo.
+Mathematically extracts dominant colors (Canvas, Surfaces, Borders, Text)
+and high-saturation accent candidates directly from an image or screenshot,
+while computing relative WCAG contrast ratios.
 
-Uso:
-  python .agents/skills/image2skill/scripts/extract_palette.py <caminho-da-imagem> [--json]
+Usage:
+  python .agents/skills/image2skill/scripts/extract_palette.py <image-path> [--json]
 """
 
 import argparse
@@ -76,12 +76,12 @@ def deduplicate_colors(
 def analyze_image(image_path: str) -> dict:
     path = Path(image_path)
     if not path.exists():
-        raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
+        raise FileNotFoundError(f"Image not found: {image_path}")
 
     img = Image.open(path).convert("RGB")
     orig_w, orig_h = img.size
 
-    # Redimensiona mantendo proporção para amostragem rápida e precisa
+    # Proportionally resize for fast, accurate pixel sampling
     max_dim = 480
     scale = min(1.0, max_dim / max(orig_w, orig_h))
     sample_w = max(1, int(orig_w * scale))
@@ -95,7 +95,7 @@ def analyze_image(image_path: str) -> dict:
     )
     total_pixels = len(pixels)
 
-    # Quantização leve (arredonda em degraus de 2 para agrupar artefatos de compressão)
+    # Light quantization (step of 2) to group minor compression artifacts
     quantized_pixels = [
         (r - (r % 2), g - (g % 2), b - (b % 2)) for (r, g, b) in pixels
     ]
@@ -104,7 +104,7 @@ def analyze_image(image_path: str) -> dict:
 
     dominant = deduplicate_colors(most_common, total_pixels, min_distance=12.0, limit=12)
 
-    # Filtra candidatos de acento (alta saturação e luminosidade intermediária)
+    # Filter accent candidates (high saturation and mid-range lightness)
     accent_candidates_raw = [
         (rgb, count)
         for (rgb, count) in counter.most_common(2000)
@@ -140,8 +140,8 @@ def analyze_image(image_path: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Image2Skill Palette Extractor")
-    parser.add_argument("image", help="Caminho para a imagem ou print")
-    parser.add_argument("--json", action="store_true", help="Saída em JSON puro")
+    parser.add_argument("image", help="Path to the image or screenshot")
+    parser.add_argument("--json", action="store_true", help="Output raw JSON")
     args = parser.parse_args()
 
     result = analyze_image(args.image)
@@ -151,23 +151,23 @@ def main():
         return
 
     print(f"=== Image2Skill Palette Extractor ===")
-    print(f"Arquivo:    {result['file']} ({result['dimensions']})")
-    print(f"Tema Base:  {result['detected_theme'].upper()}")
-    print("\n--- Cores Dominantes (Canvas, Superfícies, Bordas e Texto) ---")
+    print(f"File:       {result['file']} ({result['dimensions']})")
+    print(f"Base Theme: {result['detected_theme'].upper()}")
+    print("\n--- Dominant Colors (Canvas, Surfaces, Borders & Text) ---")
     for idx, c in enumerate(result["dominant_colors"], 1):
-        role = " [Canvas Principal]" if idx == 1 else ""
+        role = " [Primary Canvas]" if idx == 1 else ""
         print(
             f"  {idx:2d}. {c['hex']}  (rgb: {c['rgb']}) | {c['percentage']:5.2f}% | "
-            f"lum: {c['luminance']:.3f} | contraste vs canvas: {c['contrast_vs_canvas']}:1{role}"
+            f"lum: {c['luminance']:.3f} | contrast vs canvas: {c['contrast_vs_canvas']}:1{role}"
         )
 
-    print("\n--- Candidatos de Acento & Gráficos (Alta Saturação) ---")
+    print("\n--- Accent & Chart Candidates (High Saturation) ---")
     if not result["accent_candidates"]:
-        print("  (Nenhuma cor de alta saturação detectada — design monocromático/acromático)")
+        print("  (No high-saturation colors detected — monochromatic/achromatic design)")
     for idx, c in enumerate(result["accent_candidates"], 1):
         print(
             f"  {idx:2d}. {c['hex']}  (rgb: {c['rgb']}) | {c['percentage']:5.2f}% | "
-            f"sat: {c['saturation']:.2f} | contraste vs canvas: {c['contrast_vs_canvas']}:1"
+            f"sat: {c['saturation']:.2f} | contrast vs canvas: {c['contrast_vs_canvas']}:1"
         )
 
 

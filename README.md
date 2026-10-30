@@ -1,77 +1,77 @@
 # Image2Skill — Visual & DOM Reverse Engineering Engine
 
-> Motor de engenharia reversa visual e estrutural para agentes de IA (Antigravity / Claude Code / Cursor). Transforma prints, screenshots, mockups e URLs de interfaces em **Design Systems completos e Skills padronizadas** com precisão matemática.
+> High-precision visual and structural UI reverse-engineering skill for AI coding agents (Antigravity, Claude Code, Cursor). Transforms screenshots, mockups, and live URLs into **complete Design Systems and standardized Agent Skills** with mathematical accuracy.
 
 ---
 
-## 🚀 Visão Geral
+## 🚀 Overview
 
-Diferente de uma análise puramente subjetiva por visão computacional, o **Image2Skill** opera com **3 motores combinados**:
+Unlike purely subjective vision-only estimation, **Image2Skill** combines **3 deterministic engines**:
 
-1. **Extração Matemática de Pixels (`scripts/extract_palette.py`):** Analisa a imagem via Python (Pillow) para extrair os códigos HEX/RGB exatos, dominância cromática e taxas de contraste WCAG AA/AAA reais.
-2. **Modo Híbrido URL + Print (`agent-browser` + `scripts/extract_dom_styles.js`):** Quando uma URL ou web app acessível é identificado, inspeciona o DOM renderizado em tempo real para capturar variáveis CSS `:root`, famílias tipográficas, grids, sombras, raios de borda e o código `<svg>` literal dos ícones (Regra Zero-Unicode).
-3. **Self-Healing Visual Validation (`agent-browser`):** Renderiza o `preview.html` gerado em um navegador headless, executa auditoria de acessibilidade (`a11y`), captura screenshot de validação e compara com a referência original antes de finalizar.
+1. **Mathematical Pixel Extraction (`scripts/extract_palette.py`):** Analyzes the image via Python (Pillow) to extract exact HEX/RGB codes, color dominance percentages, and real WCAG AA/AAA contrast ratios.
+2. **Hybrid URL + Screenshot Mode (`agent-browser` + `scripts/extract_dom_styles.js`):** When a URL or recognizable web app is identified, inspects the live rendered DOM to capture `:root` CSS custom properties, exact font families, grid templates, shadows, border radii, and literal `<svg>` icon vectors (Zero-Unicode Rule).
+3. **Self-Healing Visual Validation (`agent-browser`):** Renders the generated `preview.html` in a headless browser, runs an accessibility (`a11y`) audit, captures a validation screenshot, and compares it against the original reference before completing the task.
 
 ---
 
-## 📦 Instalação
+## 📦 Installation
 
-### Opção 1: Via `npx skills`
+### Option 1: Via `npx skills`
 ```bash
 npx skills add Fredson-Santos/image2skill
 ```
 
-### Opção 2: Clone direto no projeto (Workspace Skill)
+### Option 2: Clone directly into your workspace
 ```bash
 git clone https://github.com/Fredson-Santos/image2skill.git .agents/skills/image2skill
 ```
 
-### Opção 3: Instalação Global no Antigravity
+### Option 3: Global Installation (Antigravity)
 ```bash
 git clone https://github.com/Fredson-Santos/image2skill.git ~/.gemini/config/skills/image2skill
 ```
 
 ---
 
-## 🛠️ Pré-requisitos
+## 🛠️ Prerequisites
 
-- **Python 3.8+** com `Pillow` instalado (`pip install Pillow`) para o extrator matemático de paleta (`scripts/extract_palette.py`).
-- **`agent-browser`** (opcional, recomendado para o Modo Híbrido URL+Print e auto-validação visual do `preview.html`).
+- **Python 3.8+** with `Pillow` installed (`pip install Pillow`) for the mathematical palette extractor (`scripts/extract_palette.py`).
+- **`agent-browser`** (optional, recommended for Hybrid URL+Screenshot DOM extraction and self-healing `preview.html` visual validation).
 
 ---
 
-## 📂 Estrutura da Skill
+## 📂 Repository Structure
 
 ```text
 image2skill/
-├── SKILL.md                                  # Instruções principais e pipeline de 5 fases do agente
+├── SKILL.md                                  # Core agent instructions and 5-phase pipeline
 ├── scripts/
-│   ├── extract_palette.py                    # Extrator matemático de cores HEX/RGB e contraste WCAG
-│   └── extract_dom_styles.js                 # Extrator de CSS :root, tipografia, grid e SVGs via DOM
+│   ├── extract_palette.py                    # Mathematical HEX/RGB & WCAG contrast extractor
+│   └── extract_dom_styles.js                 # Live DOM CSS :root, typography, grid & SVG extractor
 └── resources/
-    ├── extraction-protocol.md                # Protocolo detalhado de engenharia reversa visual e DOM
+    ├── extraction-protocol.md                # Detailed visual & DOM reverse-engineering protocol
     └── templates/
-        ├── skill-template.md                 # Template padronizado para o SKILL.md gerado
-        ├── tokens-template.css               # Template CSS :root + Tailwind v4 @theme
-        ├── tailwind-template.js              # Template de configuração Tailwind v3
-        ├── components-template.md            # Catálogo de componentes HTML + Tailwind
-        └── preview-template.html             # Réplica interativa + Styleguide visual autônomo
+        ├── skill-template.md                 # Standardized template for generated SKILL.md
+        ├── tokens-template.css               # CSS :root variables + Tailwind v4 @theme template
+        ├── tailwind-template.js              # Tailwind v3 theme extension template
+        ├── components-template.md            # HTML + Tailwind component catalog template
+        └── preview-template.html             # Interactive UI replica + live styleguide template
 ```
 
 ---
 
-## ⚡ Como Usar
+## ⚡ Usage
 
-Basta enviar uma imagem, print ou URL no chat do agente e pedir:
+Provide a screenshot, mockup, or URL in your agent chat and ask:
 
-- *"Crie uma skill com base nesse print"*
-- *"Transforme essa imagem em um design system"*
-- *"Rode o image2skill nessa imagem / site"*
+- *"Create a skill based on this screenshot"*
+- *"Turn this image into a design system"*
+- *"Run image2skill on this image / site"*
 
-### O que é gerado para cada nova skill criada:
-Cada execução do `image2skill` gera automaticamente uma nova skill em `.agents/skills/<nome-da-skill>/` contendo 5 artefatos completos:
-1. `SKILL.md` — Documentação da arquitetura visual, tabelas de tokens, contraste, regras White-Label e *Do's & Don'ts*.
-2. `resources/tokens.css` — Variáveis CSS `:root` completas + bloco `@theme` para Tailwind v4.
-3. `resources/tailwind.config.js` — Extensão de tema pronta para Tailwind v3.
-4. `resources/components.md` — Snippets HTML + Tailwind fiéis aos componentes da referência.
-5. `resources/templates/preview.html` — Showcase interativo contendo a réplica da interface original e o guia de estilos vivo.
+### What gets generated for each new skill:
+Every execution of `image2skill` automatically scaffolds a new skill inside `.agents/skills/<skill-name>/` containing 5 complete artifacts:
+1. `SKILL.md` — Visual architecture documentation, token tables, contrast ratios, White-Label rules, and *Do's & Don'ts*.
+2. `resources/tokens.css` — Complete `:root` CSS variables + Tailwind v4 `@theme` configuration.
+3. `resources/tailwind.config.js` — Ready-to-use Tailwind v3 theme extension.
+4. `resources/components.md` — Production-ready HTML + Tailwind snippets faithful to the reference UI.
+5. `resources/templates/preview.html` — Self-contained interactive showcase featuring both a full UI replica and a live design system matrix.

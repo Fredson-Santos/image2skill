@@ -1,12 +1,12 @@
 /**
  * Image2Skill — Live DOM Design System, Layout, Component & Exact SVG Icon Extractor
- * Executado via `agent-browser eval -b <base64>` quando uma URL ou site é identificado.
- * Extrai:
- *  1. Variáveis CSS nativas (:root custom properties)
- *  2. Tipografia exata (fontFamily, fontSize, fontWeight, letterSpacing, lineHeight)
- *  3. Arquitetura de Layout & Grid (sidebar, header, main, grids, gaps, paddings)
- *  4. Anatomia real dos Componentes (Botões, Cards, Inputs, Badges, Tabelas)
- *  5. Catálogo de Ícones SVG Reais (outerHTML limpo, viewBox, strokeWidth, contexto/botão pai)
+ * Executed via `agent-browser eval -b <base64>` when a URL or live site is identified.
+ * Extracts:
+ *  1. Native CSS custom properties (:root / .dark variables)
+ *  2. Exact typography (fontFamily, fontSize, fontWeight, letterSpacing, lineHeight)
+ *  3. Layout & Grid architecture (sidebar, header, main, grids, gaps, paddings)
+ *  4. Real Component anatomy (Buttons, Cards, Inputs, Badges, Tables)
+ *  5. Exact SVG Icon catalog (clean outerHTML, viewBox, strokeWidth, parent button/context)
  */
 (() => {
   const rgbToHex = (rgbStr) => {
@@ -21,7 +21,7 @@
     return a < 1 ? `${hex} (alpha: ${a})` : hex;
   };
 
-  // 1. Extrair variáveis CSS (:root e html/body/.dark)
+  // 1. Extract CSS custom properties (:root and html/body/.dark)
   const rootVars = {};
   try {
     const htmlCs = window.getComputedStyle(document.documentElement);
@@ -84,7 +84,7 @@
     return null;
   };
 
-  // 2. Estrutura de Layout e Containers
+  // 2. Layout & Container Structure
   const layout = {
     body: extractStyle(document.body),
     header: pickFirstVisible(['header', '[role="banner"]', 'nav']),
@@ -93,7 +93,7 @@
     gridContainer: pickFirstVisible(['[class*="grid"]', 'main > div']),
   };
 
-  // 3. Escala Tipográfica Computada
+  // 3. Computed Typographic Scale
   const typography = {
     h1: pickFirstVisible(['h1']),
     h2: pickFirstVisible(['h2']),
@@ -102,7 +102,7 @@
     monoOrCode: pickFirstVisible(['code', 'pre', '[class*="mono"]']),
   };
 
-  // 4. Anatomia dos Componentes Reais
+  // 4. Real Component Anatomy
   const components = {
     primaryButton: pickFirstVisible([
       'button[class*="primary"]',
@@ -137,10 +137,10 @@
     tableRow: pickFirstVisible(['tbody tr', '[role="row"]']),
   };
 
-  // 5. Extração Real e Limpa dos Ícones SVG da Página
+  // 5. Clean & Exact Extraction of Page SVG Icons
   const cleanSvgOuterHtml = (svgEl) => {
     const clone = svgEl.cloneNode(true);
-    // Remove atributos de hidratação/framework desnecessários mantendo geometria e classes essenciais
+    // Strip unnecessary framework/hydration attributes while preserving geometry and classes
     const removeAttrs = ['data-hk', 'data-testid', 'data-slot', 'focusable', 'aria-hidden'];
     const walk = (node) => {
       if (node.nodeType === 1) {
@@ -164,7 +164,7 @@
   const iconMap = new Map();
   for (const svg of Array.from(document.querySelectorAll('svg'))) {
     const rect = svg.getBoundingClientRect();
-    // Captura ícones e ilustrações compactas visíveis (entre 8px e 80px)
+    // Capture visible compact icons and illustrations (between 8px and 80px)
     if (rect.width < 8 || rect.height < 8 || rect.width > 80 || rect.height > 80) continue;
     const innerSig = svg.innerHTML.replace(/\s+/g, '');
     const ctx = getSvgContext(svg);

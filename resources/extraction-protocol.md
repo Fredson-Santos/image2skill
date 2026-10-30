@@ -1,126 +1,126 @@
-# Image2Skill — Protocolo de Extração Visual & DOM de Interfaces
+# Image2Skill — Visual & DOM UI Extraction Protocol
 
-Este documento define o algoritmo híbrido de engenharia reversa (Pixel + DOM + Visual Validation) que o agente deve seguir ao receber um print, mockup, imagem de referência ou URL de uma interface.
+This document defines the hybrid reverse-engineering algorithm (Pixel + Live DOM + Visual Validation) that the agent must follow when given a screenshot, mockup, reference image, or URL of a user interface.
 
 ---
 
-## 1. Extração Automatizada (Pixel + Live DOM)
+## 1. Automated Extraction (Pixel + Live DOM)
 
-### Etapa 0A: Extração Matemática de Cores via Script Python (Obrigatória para Imagens)
-Antes de estimar qualquer cor visualmente, execute o extrator de paleta sobre a imagem enviada pelo usuário:
+### Step 0A: Mathematical Color Extraction via Python Script (Mandatory for Images)
+Before estimating any color visually, run the palette extractor on the user-provided image:
 
 ```powershell
-python .agents/skills/image2skill/scripts/extract_palette.py "<caminho-da-imagem>"
+python .agents/skills/image2skill/scripts/extract_palette.py "<image-path>"
 ```
 
-- Utilize os códigos **HEX exatos** retornados em `Cores Dominantes` para mapear `--bg-canvas`, `--bg-surface`, `--bg-surface-elevated`, `--border-subtle` e `--text-primary`.
-- Utilize os códigos em `Candidatos de Acento & Gráficos` para mapear `--accent-primary`, `--accent-secondary` e `--chart-1..5`.
-- Valide a coluna `contraste vs canvas` para assegurar legibilidade WCAG.
+- Use the **exact HEX codes** returned under `Dominant Colors` to map `--bg-canvas`, `--bg-surface`, `--bg-surface-elevated`, `--border-subtle`, and `--text-primary`.
+- Use the codes under `Accent & Chart Candidates` to map `--accent-primary`, `--accent-secondary`, and `--chart-1..5`.
+- Validate the `contrast vs canvas` column to ensure WCAG readability.
 
-### Etapa 0B: Detecção de URL / Site & Extração Real de Layout/Componentes via `agent-browser`
-Inspecione a imagem e o pedido do usuário em busca de **qualquer pista de URL ou domínio web**:
-- Barra de endereços visível no print (ex: `app.site.com`, `localhost:3000`, `*.vercel.app`, `*.sslip.io`, etc.);
-- URL fornecida no texto pelo usuário;
-- Nome de produto/site público claramente identificável que possua URL acessível.
+### Step 0B: URL / Website Detection & Live Layout/Component Extraction via `agent-browser`
+Inspect both the image and the user's prompt for **any clue of a URL or web domain**:
+- Visible address bar in the screenshot (e.g., `app.site.com`, `localhost:3000`, `*.vercel.app`, `*.sslip.io`, etc.);
+- URL explicitly provided in the user's text prompt;
+- Clearly identifiable public product or web app with an accessible URL.
 
-**Sempre que uma URL/site for identificada:**
-1. Abra o site em uma sessão isolada do `agent-browser`:
+**Whenever a URL or live site is identified:**
+1. Open the target URL in an isolated `agent-browser` session:
    ```powershell
    $env:AGENT_BROWSER_SESSION = "image2skill-extract"
    agent-browser open "<URL>"
    agent-browser wait 2000
    ```
-2. Extraia a **árvore semântica de layout e componentes interativos**:
+2. Extract the **semantic layout tree and interactive elements**:
    ```powershell
    agent-browser snapshot -i
    ```
-3. Extraia **todas as variáveis CSS `:root`, fontes reais, grid/layout e estilos computados dos componentes** injetando o extrator DOM da skill via Base64 (`-b`):
+3. Extract **all `:root` CSS variables, computed font families, grid/layout properties, component styles, and SVG icons** by injecting the skill's DOM extractor via Base64 (`-b`):
    ```powershell
    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content .agents/skills/image2skill/scripts/extract_dom_styles.js -Raw)))
    agent-browser eval -b $b64
    ```
-4. Caso a tela do print seja uma subpágina ou conta demo (ex: botão "Explorar conta de demonstração" ou abas internas), navegue até ela com `agent-browser click` e rode novamente o `extract_dom_styles.js`.
-5. Feche a sessão ao concluir: `agent-browser close`.
+4. If the screenshot shows an internal view or demo account (e.g., an "Explore demo account" button or internal tab), navigate to it using `agent-browser click` and re-run `extract_dom_styles.js`.
+5. Close the session when finished: `agent-browser close`.
 
 ---
 
-## 2. Etapas de Decomposição Visual & Estrutural
+## 2. Visual & Structural Decomposition Steps
 
-### Etapa 1: Classificação do Arquétipo Estético
-Identifique em qual arquétipo principal a interface se enquadra:
-- **Dark Precision / Technical:** Canvas escuro profundo (`#08090a` a `#151515`), bordas hairline `1px` translúcidas, tracking apertado em títulos e fontes mono para metadados.
-- **Neo-Brutalist / Pop Technical:** Fundo creme/papel ou vibrante, bordas sólidas pretas de `2px–3px`, sombras duras deslocadas sem blur (`4px 4px 0px #111`), badges/stickers inclinados.
-- **Editorial Minimal / Workspace:** Canvas branco/papel quente (`#ffffff` / `#f7f7f5`), tipografia de alto contraste (Sans ou Serif), divisórias sutis e tags pastel.
-- **Motion-First / Soft Modern:** Raios amplos (`16px–24px`), pílulas `rounded-full`, superfícies táteis em camadas (`#151515` → `#1c1c1c` → `#262626`) e micro-interações.
-- **Glassmorphic / Ambient Gradient:** Superfícies translúcidas com `backdrop-filter: blur(16px)`, bordas especulares e brilhos radiais sutis.
+### Step 1: Aesthetic Archetype Classification
+Identify which primary archetype best describes the interface:
+- **Dark Precision / Technical:** Deep dark canvas (`#08090a` to `#151515`), translucent `1px` hairline borders, tight heading tracking, and monospace metadata labels.
+- **Neo-Brutalist / Pop Technical:** Warm cream/oatmeal or vibrant canvas, solid `2px–3px` black borders, hard offset drop shadows without blur (`4px 4px 0px #111`), tilted stickers/badges.
+- **Editorial Minimal / Workspace:** Pure white or warm paper canvas (`#ffffff` / `#f7f7f5`), high-contrast typography (Sans or Serif), subtle dividers, and soft pastel tags.
+- **Motion-First / Soft Modern:** Generous border radii (`16px–24px`), `rounded-full` pills, tactile layered surfaces (`#151515` → `#1c1c1c` → `#262626`), and smooth micro-interactions.
+- **Glassmorphic / Ambient Gradient:** Translucent surfaces with `backdrop-filter: blur(16px)`, specular borders, and subtle radial glows.
 
-### Etapa 2: Arquitetura de Layout & Grid (`App Shell`)
-Extraia a geometria macro da tela:
-1. **Navegação:** Sidebar lateral fixa (qual largura? ex: `240px` ou rail `64px`), Topbar horizontal sticky, ou Flutuante (Dock/Pill)?
-2. **Grid Principal:** Quantas colunas compõem a área de trabalho? (ex: 4 KPI cards no topo + Grid 2 colunas assimétrico `2fr 1fr` abaixo + Tabela full-width).
-3. **Densidade (Paddings & Gaps):** Espaçamento interno dos cards (`16px`, `20px`, `24px`) e distância entre blocos (`gap-3`, `gap-4`, `gap-6`).
+### Step 2: Layout & Grid Architecture (`App Shell`)
+Extract the macro geometry of the viewport:
+1. **Navigation:** Fixed left sidebar (what width? e.g., `240px` or `64px` compact rail), sticky horizontal topbar, or floating dock/pill?
+2. **Main Grid:** How many columns make up the workspace? (e.g., 4 top KPI cards + asymmetric 2-column `2fr 1fr` grid below + full-width table).
+3. **Density (Paddings & Gaps):** Internal card padding (`16px`, `20px`, `24px`) and spacing between blocks (`gap-3`, `gap-4`, `gap-6`).
 
-### Etapa 3: Superfícies, Bordas e Sistema de Elevação
-1. **Pilha de Camadas (Surface Stack):**
-   - `--bg-canvas`: Fundo geral da aplicação.
-   - `--bg-surface`: Cards, linhas de tabela e painéis.
-   - `--bg-surface-elevated`: Modais, popovers, drawers, assistentes laterais.
-   - `--bg-surface-muted`: Fundos secundários, cabeçalhos de tabela, trilhos de switch/tabs.
-2. **Bordas & Sombras:**
-   - Hairline translúcida (`rgba(255,255,255,0.08)`), sólida (`1px solid #e5e7eb`) ou grossa (`2px solid #111`)?
-   - Sombra difusa suave, sombra dura (`offset`) ou elevação puramente cromática (sem sombra)?
+### Step 3: Surfaces, Borders & Elevation System
+1. **Surface Stack:**
+   - `--bg-canvas`: Root application background.
+   - `--bg-surface`: Cards, table rows, and panels.
+   - `--bg-surface-elevated`: Modals, popovers, drawers, side assistants.
+   - `--bg-surface-muted`: Secondary backgrounds, table headers, switch/tab rails.
+2. **Borders & Shadows:**
+   - Translucent hairline (`rgba(255,255,255,0.08)`), solid (`1px solid #e5e7eb`), or thick (`2px solid #111`)?
+   - Soft ambient shadow, hard offset shadow, or purely chromatic elevation (no shadow)?
 
-### Etapa 4: Hierarquia de Tipografia e Escala
-1. **Famílias:** Sans principal, Mono técnica (para números tabulares `tabular-nums`, códigos, datas, valores financeiros) e Display (se houver).
-2. **Pesos, Tamanhos e Tracking:** Extraia os valores reais (do DOM ou da inspeção visual) para Display/H1, H2, H3, Body e Overline/Mono.
+### Step 4: Typography Hierarchy & Scale
+1. **Font Families:** Primary Sans, technical Mono (for `tabular-nums`, code, dates, financial amounts), and Display (if present).
+2. **Weights, Sizes & Tracking:** Extract exact values (from live DOM or visual inspection) for Display/H1, H2, H3, Body, and Overline/Mono.
 
-### Etapa 5: Acentos, Cores Semânticas e Paleta de Gráficos (`--chart-1..5`)
-1. **Acento Primário (`--accent-primary`):** Cor de ação principal e cor do texto sobre ela (`--accent-primary-fg`).
-2. **Paleta de Dados (`--chart-1` a `--chart-5`):** Cores usadas em gráficos de barra/linha/donut, barras de progresso e categorias.
-3. **Status (`--status-success`, `--status-warning`, `--status-danger`, `--status-info`):** Cores de badges positivos, alertas e variações negativas.
+### Step 5: Accents, Semantic Colors & Chart Palette (`--chart-1..5`)
+1. **Primary Accent (`--accent-primary`):** Primary action color and its contrasting foreground text (`--accent-primary-fg`).
+2. **Data Visualization Palette (`--chart-1` to `--chart-5`):** Colors used in bar/line/donut charts, progress bars, and category breakdowns.
+3. **Status (`--status-success`, `--status-warning`, `--status-danger`, `--status-info`):** Semantic colors for positive, warning, and destructive states.
 
-### Etapa 6: Extração Fiel de Iconografia & SVGs (Regra Zero-Unicode)
+### Step 6: Faithful Iconography & SVG Extraction (Zero-Unicode Rule)
 > [!IMPORTANT]
-> **PROIBIDO improvisar ícones com caracteres Unicode ou Emojis** (ex: NUNCA use `☀`, `☾`, `▭`, `🤖`, `⊞`, `△`, `◫`, `✕`, `i`, `⋯` no lugar de ícones reais).
+> **NEVER improvise icons using Unicode characters or Emojis** (e.g., NEVER use `☀`, `☾`, `▭`, `🤖`, `⊞`, `△`, `◫`, `✕`, `i`, `⋯` in place of real vector icons).
 
-1. **Quando houver URL / Site (`agent-browser`):**
-   - O script `scripts/extract_dom_styles.js` retorna a propriedade `icons` contendo até 35 objetos `{ context, dimensions, viewBox, strokeWidth, color, svgHtml }` extraídos diretamente do DOM.
-   - Copie o `svgHtml` **literal e exato** de cada botão, aba, input ou card para dentro do `components.md` e do `preview.html`.
-2. **Quando houver APENAS Imagem (sem URL acessível):**
-   - Identifique a família e o estilo dos ícones no print:
-     - **Outline Técnico (Lucide / Tabler / Feather):** Traço uniforme (`1.5px`, `1.75px` ou `2px`), `stroke-linecap="round"`, `stroke-linejoin="round"`. Utilize o CDN oficial do **Lucide Icons** (`<script src="https://unpkg.com/lucide@latest"></script>` + `<i data-lucide="nome-do-icone"></i>`) ou `<svg>` vetorial completo.
-     - **Dot-Matrix / Pixel / Custom:** Construa o `<svg>` com os elementos `<circle>` ou `<rect>` nas coordenadas exatas da matriz (ex: matriz 2x2 ou 3x3 de pontos).
-     - **Solid / Duotone:** Utilize `<svg fill="currentColor">` com opacidade secundária nas camadas internas.
+1. **When a URL / Live Site is available (`agent-browser`):**
+   - `scripts/extract_dom_styles.js` returns an `icons` array containing up to 35 objects `{ contexts, dimensions, viewBox, strokeWidth, color, svgHtml }` extracted directly from the live DOM.
+   - Copy the **exact literal `svgHtml`** for each button, tab, input, or card into `components.md` and `preview.html`.
+2. **When ONLY an Image is available (no accessible URL):**
+   - Identify the icon family and stroke style in the screenshot:
+     - **Technical Outline (Lucide / Tabler / Feather):** Uniform stroke (`1.5px`, `1.75px`, or `2px`), `stroke-linecap="round"`, `stroke-linejoin="round"`. Use the official **Lucide Icons CDN** (`<script src="https://unpkg.com/lucide@latest"></script>` + `<i data-lucide="icon-name"></i>`) or complete inline `<svg>` vectors.
+     - **Dot-Matrix / Pixel / Custom:** Build the inline `<svg>` with `<circle>` or `<rect>` elements at the exact matrix coordinates (e.g., 2x2 or 3x3 dot grid).
+     - **Solid / Duotone:** Use `<svg fill="currentColor">` with secondary opacity layers.
 
-### Etapa 7: Anatomia Completa dos Componentes
-Reconstrua fielmente todos os componentes presentes na referência (incluindo seus SVGs reais):
+### Step 7: Complete Component Anatomy
+Faithfully reconstruct every component visible in the reference (including real SVGs):
 - App Shell (Sidebar / Header / Main Grid)
-- Botões (Primário, Secundário, Ghost, Ícone)
-- Cards de KPI / Métricas e Contêineres
-- Tabelas / Listas Interativas com Hover
-- Inputs, Buscas (`cmd+k` / `/`), Selects e Switches
-- Badges, Pills de Categoria e Indicadores de Tendência
-- Modais ou Assistentes Laterais (se presentes)
+- Buttons (Primary, Secondary, Ghost, Icon Button)
+- KPI / Metric Cards & Containers
+- Interactive Tables / Lists with Hover States
+- Inputs, Search Bars (`cmd+k` / `/`), Selects, and Switches
+- Badges, Category Pills, and Trend Indicators
+- Modals or Side Assistants (if present)
 
 ---
 
-## 3. Loop de Auto-Validação Visual (Self-Healing `preview.html`)
+## 3. Self-Healing Visual Validation Loop (`preview.html`)
 
-Após gerar os 5 arquivos da skill na Fase 3, **NUNCA entregue o `preview.html` sem validá-lo no navegador**:
+After generating the 5 skill files in Phase 3, **NEVER deliver `preview.html` without validating it in a real browser**:
 
-1. Abra o arquivo `preview.html` recém-gerado com o `agent-browser`:
+1. Open the newly generated `preview.html` with `agent-browser`:
    ```powershell
    $env:AGENT_BROWSER_SESSION = "image2skill-validate"
-   agent-browser open "file:///<caminho-absoluto-do-preview.html>"
+   agent-browser open "file:///<absolute-path-to-preview.html>"
    agent-browser wait 1500
    ```
-2. Capture um screenshot da renderização real e rode a auditoria de acessibilidade/contraste:
+2. Capture a screenshot of the live rendering and run the accessibility/contrast audit:
    ```powershell
-   agent-browser screenshot "<caminho-temporario>/preview-check.png"
+   agent-browser screenshot "<temp-path>/preview-check.png"
    agent-browser a11y
    agent-browser close
    ```
-3. Inspecione visualmente o `preview-check.png` com `read_file` e compare com a imagem original do usuário:
-   - O layout, cores de fundo, bordas, fontes e alinhamentos correspondem fielmente ao print original?
-   - Algum texto ficou sem contraste ou algum card quebrou o grid?
-4. Se houver qualquer divergência visual ou erro de contraste, **edite o `preview.html` e `tokens.css`** imediatamente antes de apresentar o resultado final ao usuário.
+3. Visually inspect `preview-check.png` using `read_file` and compare it against the user's original reference image:
+   - Do the layout, background colors, borders, fonts, and alignments faithfully match the original screenshot?
+   - Is any text lacking contrast, or did any card break the grid?
+4. If there is any visual discrepancy or contrast issue, **immediately edit `preview.html` and `tokens.css`** before presenting the final result to the user.
