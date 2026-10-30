@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{DISPLAY_NAME}} — Preview & Styleguide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons fallback para modo apenas-imagem (preferir <svg> literal extraído do DOM quando houver URL) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="{{GOOGLE_FONTS_URL}}" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: {{COLOR_CANVAS}};
+      --bg-surface: {{COLOR_SURFACE}};
+      --bg-surface-elevated: {{COLOR_SURFACE_ELEVATED}};
+      --bg-surface-muted: {{COLOR_SURFACE_MUTED}};
+      --bg-surface-hover: {{COLOR_SURFACE_HOVER}};
+      --border-subtle: {{BORDER_SUBTLE}};
+      --border-default: {{BORDER_DEFAULT}};
+      --border-strong: {{BORDER_STRONG}};
+      --text-primary: {{TEXT_PRIMARY}};
+      --text-secondary: {{TEXT_SECONDARY}};
+      --text-muted: {{TEXT_MUTED}};
+      --accent-primary: {{ACCENT_PRIMARY}};
+      --accent-primary-hover: {{ACCENT_PRIMARY_HOVER}};
+      --accent-primary-fg: {{ACCENT_PRIMARY_FG}};
+      --accent-secondary: {{ACCENT_SECONDARY}};
+      --status-success: {{STATUS_SUCCESS}};
+      --status-warning: {{STATUS_WARNING}};
+      --status-danger: {{STATUS_DANGER}};
+      --chart-1: {{CHART_1}};
+      --chart-2: {{CHART_2}};
+      --chart-3: {{CHART_3}};
+      --chart-4: {{CHART_4}};
+      --radius-sm: {{RADIUS_CONTROLS}}px;
+      --radius-md: {{RADIUS_CARDS}}px;
+      --shadow-card: {{SHADOW_CARD}};
+    }
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: {{FONT_SANS_CSS}};
+    }
+    .font-mono-tech {
+      font-family: {{FONT_MONO_CSS}};
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-[var(--accent-primary)] selection:text-[var(--accent-primary-fg)]">
+
+  <!-- SEÇÃO 1: RÉPLICA FIEL DA INTERFACE EXTRAÍDA -->
+  <main id="interface-replica">
+    {{REPLICA_INTERFACE_HTML}}
+  </main>
+
+  <!-- SEÇÃO 2: MATRIZ DE TOKENS & COMPONENTES (STYLEGUIDE) -->
+  <section id="styleguide-showcase" class="max-w-7xl mx-auto px-6 py-12 mt-12 border-t border-[var(--border-subtle)]">
+    <div class="mb-8">
+      <span class="font-mono-tech text-xs uppercase tracking-widest text-[var(--text-muted)]">Design System Matrix</span>
+      <h2 class="text-2xl font-semibold tracking-tight mt-1">Tokens Cromáticos, Tipografia & Componentes</h2>
+    </div>
+
+    <!-- Swatches de Cores -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-10">
+      {{COLOR_SWATCHES_HTML}}
+    </div>
+
+    <!-- Showcase de Componentes Isolados -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {{COMPONENTS_SHOWCASE_HTML}}
+    </div>
+  </section>
+
+  <script>
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
+
