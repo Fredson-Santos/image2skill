@@ -9,9 +9,11 @@ This document defines the hybrid reverse-engineering algorithm (Pixel + Live DOM
 ### Step 0A: Mathematical Color Extraction via Python Script (Mandatory for Images)
 Before estimating any color visually, run the palette extractor on the user-provided image:
 
-```powershell
-python .agents/skills/image2skill/scripts/extract_palette.py "<image-path>"
+```bash
+python3 <skill-dir>/scripts/extract_palette.py "<image-path>"     # bash/zsh (PowerShell: python ...)
 ```
+
+`<skill-dir>` is the folder containing the image2skill `SKILL.md`. If the reference has two themes, run the extractor once per theme image.
 
 - Use the **exact HEX codes** returned under `Dominant Colors` to map `--bg-canvas`, `--bg-surface`, `--bg-surface-elevated`, `--border-subtle`, and `--text-primary`.
 - Use the codes under `Accent & Chart Candidates` to map `--accent-primary`, `--accent-secondary`, and `--chart-1..5`.
@@ -25,22 +27,30 @@ Inspect both the image and the user's prompt for **any clue of a URL or web doma
 
 **Whenever a URL or live site is identified:**
 1. Open the target URL in an isolated `agent-browser` session:
-   ```powershell
-   $env:AGENT_BROWSER_SESSION = "image2skill-extract"
+   ```bash
+   export AGENT_BROWSER_SESSION=image2skill-extract     # PowerShell: $env:AGENT_BROWSER_SESSION = "image2skill-extract"
    agent-browser open "<URL>"
    agent-browser wait 2000
    ```
 2. Extract the **semantic layout tree and interactive elements**:
-   ```powershell
+   ```bash
    agent-browser snapshot -i
    ```
-3. Extract **all `:root` CSS variables, computed font families, grid/layout properties, component styles, and SVG icons** by injecting the skill's DOM extractor via Base64 (`-b`):
-   ```powershell
-   $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content .agents/skills/image2skill/scripts/extract_dom_styles.js -Raw)))
-   agent-browser eval -b $b64
+3. Extract **CSS variables per theme context, computed font families, grid/layout properties, component styles, and SVG icons** by piping the skill's DOM extractor to `eval --stdin`:
+   ```bash
+   agent-browser eval --stdin < <skill-dir>/scripts/extract_dom_styles.js
    ```
+   ```powershell
+   Get-Content <skill-dir>/scripts/extract_dom_styles.js -Raw | agent-browser eval --stdin
+   ```
+   - `cssVariables` is keyed by context (`:root`, `.dark`, `[data-theme="dark"]`, `@media (prefers-color-scheme: dark) :root`, `@layer base :root`, …). Values come from the CSS rules themselves, so light and dark values are both available. Map each theme from its own context.
+   - `stylesheetReport.skippedCrossOrigin` lists stylesheets that could not be read (no CORS). Tokens defined there are missing; recover them from computed styles and the image.
+   - To read computed values of the other theme, toggle it on the page (click the site's theme switch, or re-open in a new session with `AGENT_BROWSER_COLOR_SCHEME=dark`) and run the extractor again.
 4. If the screenshot shows an internal view or demo account (e.g., an "Explore demo account" button or internal tab), navigate to it using `agent-browser click` and re-run `extract_dom_styles.js`.
 5. Close the session when finished: `agent-browser close`.
+
+### Step 0C: Theme Inventory
+Before mapping tokens, decide whether the reference has **one theme or two**. With two themes, every color and elevation token needs a light and a dark value; the dark values go into `{{DARK_THEME_BLOCK}}` of `tokens.css`. Overriding only surfaces is a defect.
 
 ---
 
@@ -74,10 +84,11 @@ Extract the macro geometry of the viewport:
 1. **Font Families:** Primary Sans, technical Mono (for `tabular-nums`, code, dates, financial amounts), and Display (if present).
 2. **Weights, Sizes & Tracking:** Extract exact values (from live DOM or visual inspection) for Display/H1, H2, H3, Body, and Overline/Mono.
 
-### Step 5: Accents, Semantic Colors & Chart Palette (`--chart-1..5`)
+### Step 5: Accents, Semantic Colors, Focus & Chart Palette (`--chart-1..5`)
 1. **Primary Accent (`--accent-primary`):** Primary action color and its contrasting foreground text (`--accent-primary-fg`).
 2. **Data Visualization Palette (`--chart-1` to `--chart-5`):** Colors used in bar/line/donut charts, progress bars, and category breakdowns.
-3. **Status (`--status-success`, `--status-warning`, `--status-danger`, `--status-info`):** Semantic colors for positive, warning, and destructive states.
+3. **Status (`--status-success`, `--status-warning`, `--status-danger`, `--status-info`):** Semantic colors for positive, warning, destructive, and informational states.
+4. **Focus ring (`--border-focus`):** Must reach at least 3:1 contrast against the canvas in every theme (WCAG 1.4.11). If the reference's ring is lighter, darken it and note the change.
 
 ### Step 6: Faithful Iconography & SVG Extraction (Zero-Unicode Rule)
 > [!IMPORTANT]
@@ -88,7 +99,7 @@ Extract the macro geometry of the viewport:
    - Copy the **exact literal `svgHtml`** for each button, tab, input, or card into `components.md` and `preview.html`.
 2. **When ONLY an Image is available (no accessible URL):**
    - Identify the icon family and stroke style in the screenshot:
-     - **Technical Outline (Lucide / Tabler / Feather):** Uniform stroke (`1.5px`, `1.75px`, or `2px`), `stroke-linecap="round"`, `stroke-linejoin="round"`. Use the official **Lucide Icons CDN** (`<script src="https://unpkg.com/lucide@latest"></script>` + `<i data-lucide="icon-name"></i>`) or complete inline `<svg>` vectors.
+     - **Technical Outline (Lucide / Tabler / Feather):** Uniform stroke (`1.5px`, `1.75px`, or `2px`), `stroke-linecap="round"`, `stroke-linejoin="round"`. Use the **Lucide** script pinned in the preview template (`<i data-lucide="icon-name"></i>`; never switch it to `@latest`) or complete inline `<svg>` vectors.
      - **Dot-Matrix / Pixel / Custom:** Build the inline `<svg>` with `<circle>` or `<rect>` elements at the exact matrix coordinates (e.g., 2x2 or 3x3 dot grid).
      - **Solid / Duotone:** Use `<svg fill="currentColor">` with secondary opacity layers.
 
@@ -106,21 +117,27 @@ Faithfully reconstruct every component visible in the reference (including real 
 
 ## 3. Self-Healing Visual Validation Loop (`preview.html`)
 
-After generating the 5 skill files in Phase 3, **NEVER deliver `preview.html` without validating it in a real browser**:
+After generating the 5 skill files in Phase 3, **NEVER deliver `preview.html` without validating it in a real browser**, once per theme and once at mobile width:
 
-1. Open the newly generated `preview.html` with `agent-browser`:
-   ```powershell
-   $env:AGENT_BROWSER_SESSION = "image2skill-validate"
-   agent-browser open "file:///<absolute-path-to-preview.html>"
+1. Open the generated `preview.html` (one session per theme):
+   ```bash
+   export AGENT_BROWSER_SESSION=image2skill-validate-dark   # PowerShell: $env:AGENT_BROWSER_SESSION = "..."
+   export AGENT_BROWSER_COLOR_SCHEME=dark                   # light | dark
+   agent-browser open "file://<absolute-path-to-preview.html>"
    agent-browser wait 1500
    ```
-2. Capture a screenshot of the live rendering and run the accessibility/contrast audit:
-   ```powershell
-   agent-browser screenshot "<temp-path>/preview-check.png"
-   agent-browser a11y
-   agent-browser close
+2. Capture the rendering, the mobile layout, and run the accessibility audit:
+   ```bash
+   agent-browser screenshot --full "<temp-dir>/preview-dark.png"
+   agent-browser set viewport 375 812
+   agent-browser screenshot --full "<temp-dir>/preview-dark-mobile.png"
+   agent-browser a11y --tags wcag2a,wcag2aa
    ```
-3. Visually inspect `preview-check.png` using `read_file` and compare it against the user's original reference image:
-   - Do the layout, background colors, borders, fonts, and alignments faithfully match the original screenshot?
-   - Is any text lacking contrast, or did any card break the grid?
-4. If there is any visual discrepancy or contrast issue, **immediately edit `preview.html` and `tokens.css`** before presenting the final result to the user.
+3. Exercise the interactions: press `Tab` a few times (`agent-browser press Tab`) and screenshot to confirm a visible focus outline; click every tab, toggle, and theme switch shown in the replica and screenshot after each. Then `agent-browser close`.
+4. Inspect the screenshots against the user's original reference:
+   - Do layout, background colors, borders, fonts, and alignment match the reference in each theme?
+   - Does any text lack contrast, or did any card break the grid? Any horizontal scroll at 375px?
+   - Does every behavior named in visible text actually work? Do counts and labels match what is rendered?
+   - Does every swatch use a real token name from `tokens.css` and render `var(--token)`?
+   - Is the visible text free of the skill name, the source site, and source library names?
+5. If anything fails, **edit `preview.html` and `tokens.css` immediately and re-validate** before presenting the result.

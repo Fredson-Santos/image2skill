@@ -1,5 +1,12 @@
 /** @type {import('tailwindcss').Config} */
+//
+// Notes:
+// - Colors are CSS variables, so opacity modifiers such as `bg-status-info/10` do NOT
+//   work in Tailwind v3 (it cannot add alpha to `var(--x)`). For tinted surfaces use
+//   `color-mix(in srgb, var(--status-info) 10%, transparent)` in CSS instead.
+// - The second theme is switched with `data-theme="dark"` on <html> (see tokens.css).
 module.exports = {
+  darkMode: ["selector", '[data-theme="dark"]'],
   content: ["./src/**/*.{html,js,jsx,ts,tsx}", "./*.html"],
   theme: {
     extend: {
@@ -27,6 +34,7 @@ module.exports = {
           hover: "var(--accent-primary-hover)",
           fg: "var(--accent-primary-fg)",
           secondary: "var(--accent-secondary)",
+          "secondary-fg": "var(--accent-secondary-fg)",
         },
         status: {
           success: "var(--status-success)",
@@ -43,9 +51,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"],
-        display: ["var(--font-display)"],
+        sans: ["var(--font-family-sans)"],
+        mono: ["var(--font-family-mono)"],
+        display: ["var(--font-family-display)"],
       },
       borderRadius: {
         xs: "var(--radius-xs)",
@@ -55,9 +63,13 @@ module.exports = {
         full: "9999px",
       },
       boxShadow: {
-        sm: "var(--shadow-sm)",
-        card: "var(--shadow-card)",
-        elevated: "var(--shadow-elevated)",
+        sm: "var(--elevation-sm)",
+        card: "var(--elevation-card)",
+        elevated: "var(--elevation-elevated)",
+      },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },

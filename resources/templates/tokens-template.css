@@ -16,19 +16,19 @@
   --border-subtle: {{BORDER_SUBTLE}};
   --border-default: {{BORDER_DEFAULT}};
   --border-strong: {{BORDER_STRONG}};
-  --border-focus: {{ACCENT_PRIMARY}};
+  --border-focus: {{BORDER_FOCUS}}; /* must reach >= 3:1 against the canvas (WCAG 1.4.11) */
 
   /* 3. Typography & Hierarchy */
   --text-primary: {{TEXT_PRIMARY}};
   --text-secondary: {{TEXT_SECONDARY}};
   --text-muted: {{TEXT_MUTED}};
-  --text-on-accent: {{ACCENT_PRIMARY_FG}};
 
   /* 4. Primary & Secondary Accents */
   --accent-primary: {{ACCENT_PRIMARY}};
   --accent-primary-hover: {{ACCENT_PRIMARY_HOVER}};
   --accent-primary-fg: {{ACCENT_PRIMARY_FG}};
   --accent-secondary: {{ACCENT_SECONDARY}};
+  --accent-secondary-fg: {{ACCENT_SECONDARY_FG}};
 
   /* 5. Semantic & Status Palette */
   --status-success: {{STATUS_SUCCESS}};
@@ -44,9 +44,11 @@
   --chart-5: {{CHART_5}};
 
   /* 7. Font Families & Fluid Type Scale */
-  --font-sans: {{FONT_SANS_CSS}};
-  --font-mono: {{FONT_MONO_CSS}};
-  --font-display: {{FONT_DISPLAY_CSS}};
+  /* Named --font-family-* (not --font-*) so the Tailwind v4 @theme below can map
+     --font-sans: var(--font-family-sans) without creating a self-referencing cycle. */
+  --font-family-sans: {{FONT_SANS_CSS}};
+  --font-family-mono: {{FONT_MONO_CSS}};
+  --font-family-display: {{FONT_DISPLAY_CSS}};
 
   --text-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.75rem);
   --text-sm: clamp(0.84rem, 0.82rem + 0.12vw, 0.875rem);
@@ -67,11 +69,18 @@
   --radius-lg: {{RADIUS_CONTAINERS}}px;
   --radius-full: 9999px;
 
-  /* 9. Elevation & Shadows */
-  --shadow-sm: {{SHADOW_SM}};
-  --shadow-card: {{SHADOW_CARD}};
-  --shadow-elevated: {{SHADOW_ELEVATED}};
+  /* 9. Elevation & Shadows (named --elevation-* to avoid @theme cycles, see fonts) */
+  --elevation-sm: {{SHADOW_SM}};
+  --elevation-card: {{SHADOW_CARD}};
+  --elevation-elevated: {{SHADOW_ELEVATED}};
 }
+
+/* 10. Second theme (dark or light override).
+   Replace with a full override block when the reference has two themes, e.g.:
+     .dark, [data-theme="dark"] { color-scheme: dark; --bg-canvas: #151515; ... }
+   Override EVERY color and elevation token, not just surfaces.
+   For a single-theme design, replace the placeholder with a one-line comment saying so. */
+{{DARK_THEME_BLOCK}}
 
 @theme {
   --color-canvas: var(--bg-canvas);
@@ -83,6 +92,7 @@
   --color-border-subtle: var(--border-subtle);
   --color-border-default: var(--border-default);
   --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -92,6 +102,7 @@
   --color-accent-hover: var(--accent-primary-hover);
   --color-accent-fg: var(--accent-primary-fg);
   --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-fg: var(--accent-secondary-fg);
 
   --color-success: var(--status-success);
   --color-warning: var(--status-warning);
@@ -104,14 +115,15 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+  --font-display: var(--font-family-display);
 
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
+  /* Radii: do NOT redeclare --radius-* here (it would create var(--radius-sm) -> itself).
+     Tailwind v4 already ships --radius-xs/sm/md/lg in @layer theme, and the unlayered
+     :root values above override them, so rounded-sm/md/lg pick up the skill's radii. */
 
-  --shadow-card: var(--shadow-card);
-  --shadow-elevated: var(--shadow-elevated);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-card: var(--elevation-card);
+  --shadow-elevated: var(--elevation-elevated);
 }

@@ -1,68 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{HTML_LANG}}" data-theme="{{DEFAULT_THEME}}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{DISPLAY_NAME}} — Preview & Styleguide</title>
+
+  <!-- Theme applied before first paint: saved choice > system preference > default.
+       Keep this block even for single-theme designs (it is harmless there). -->
+  <script>
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem('preview-theme'); } catch (e) {}
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = document.documentElement.getAttribute('data-theme') || 'light';
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && {{HAS_DARK_THEME}}) theme = 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    })();
+  </script>
+
+  <!-- Preview only. In production, compile Tailwind (CLI/PostCSS) instead of the CDN. -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons fallback for image-only mode (prefer literal DOM-extracted <svg> when a URL is available) -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Single source of truth: paste the `theme` object of resources/tailwind.config.js here
+    // (including darkMode) so the preview uses exactly the same utilities as the skill.
+    tailwind.config = {{TAILWIND_CONFIG_OBJECT}};
+  </script>
+  <!-- Lucide fallback for image-only mode (prefer literal DOM-extracted <svg> when a URL is available).
+       Version is pinned on purpose: @latest can change icon names and break the preview. -->
+  <script src="https://unpkg.com/lucide@1.65.0"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="{{GOOGLE_FONTS_URL}}" rel="stylesheet">
   <style>
-    :root {
-      --bg-canvas: {{COLOR_CANVAS}};
-      --bg-surface: {{COLOR_SURFACE}};
-      --bg-surface-elevated: {{COLOR_SURFACE_ELEVATED}};
-      --bg-surface-muted: {{COLOR_SURFACE_MUTED}};
-      --bg-surface-hover: {{COLOR_SURFACE_HOVER}};
-      --border-subtle: {{BORDER_SUBTLE}};
-      --border-default: {{BORDER_DEFAULT}};
-      --border-strong: {{BORDER_STRONG}};
-      --text-primary: {{TEXT_PRIMARY}};
-      --text-secondary: {{TEXT_SECONDARY}};
-      --text-muted: {{TEXT_MUTED}};
-      --accent-primary: {{ACCENT_PRIMARY}};
-      --accent-primary-hover: {{ACCENT_PRIMARY_HOVER}};
-      --accent-primary-fg: {{ACCENT_PRIMARY_FG}};
-      --accent-secondary: {{ACCENT_SECONDARY}};
-      --status-success: {{STATUS_SUCCESS}};
-      --status-warning: {{STATUS_WARNING}};
-      --status-danger: {{STATUS_DANGER}};
-      --chart-1: {{CHART_1}};
-      --chart-2: {{CHART_2}};
-      --chart-3: {{CHART_3}};
-      --chart-4: {{CHART_4}};
-      --radius-sm: {{RADIUS_CONTROLS}}px;
-      --radius-md: {{RADIUS_CARDS}}px;
-      --shadow-card: {{SHADOW_CARD}};
-    }
+    /* Single source of truth: paste resources/tokens.css here WITHOUT the @theme block
+       (@theme is Tailwind v4 build syntax, browsers ignore it). Do not retype values. */
+    {{TOKENS_CSS_WITHOUT_THEME_BLOCK}}
+
     body {
       background-color: var(--bg-canvas);
       color: var(--text-primary);
-      font-family: {{FONT_SANS_CSS}};
+      font-family: var(--font-family-sans);
     }
-    .font-mono-tech {
-      font-family: {{FONT_MONO_CSS}};
+
+    /* Required: visible keyboard focus. Never ship `outline-none` without a replacement. */
+    a:focus-visible,
+    button:focus-visible,
+    [role="tab"]:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    /* Tinted surfaces from a token. Use this instead of `bg-status-info/10`, which does not
+       work in Tailwind v3 when colors are CSS variables. Usage:
+       <div class="tone" style="--tone: var(--status-info)">...<span class="tone-fg">...</span></div> */
+    .tone {
+      background-color: color-mix(in srgb, var(--tone) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--tone) 24%, transparent);
+    }
+    .tone .tone-fg { color: var(--tone); }
+
+    /* Smooth surfaces during a theme switch only (not on every hover). */
+    .theme-switching, .theme-switching * {
+      transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease,
+                  fill 300ms ease, box-shadow 300ms ease !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     }
   </style>
 </head>
-<body class="min-h-screen antialiased selection:bg-[var(--accent-primary)] selection:text-[var(--accent-primary-fg)]">
+<body class="min-h-screen antialiased selection:bg-accent selection:text-accent-fg">
 
-  <!-- SECTION 1: FAITHFUL REPLICA OF THE EXTRACTED INTERFACE -->
+  <!-- ==========================================================================
+       BEHAVIOR CONTRACT (read before filling the sections below)
+       1. Every behavior named in visible text (tabs, drag, toggle, "spring", "live")
+          MUST be implemented in the <script> at the end. If you will not implement
+          it, do not write the text.
+       2. Interactive-looking controls must be real controls: <button>, <input>,
+          role="switch"/"tab" with aria state kept in sync. No decorative <span> toggles.
+       3. Counts and labels must match what is rendered ("03 tasks" => 3 items,
+          "Last 6 months" => 6 bars).
+       4. White-label: no skill name, source site, or source library names
+          (e.g. "shadcn", "Linear", "Stripe") anywhere in visible text.
+       ========================================================================== -->
+
+  <!-- SECTION 1: FAITHFUL REPLICA OF THE EXTRACTED INTERFACE
+       If the design has two themes, include a theme toggle:
+       <button type="button" data-theme-toggle role="switch" aria-checked="false" aria-label="Dark mode">...</button> -->
   <main id="interface-replica">
     {{REPLICA_INTERFACE_HTML}}
   </main>
 
   <!-- SECTION 2: DESIGN SYSTEM TOKEN & COMPONENT MATRIX (STYLEGUIDE) -->
-  <section id="styleguide-showcase" class="max-w-7xl mx-auto px-6 py-12 mt-12 border-t border-[var(--border-subtle)]">
+  <section id="styleguide-showcase" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 mt-12 border-t border-border-subtle">
     <div class="mb-8">
-      <span class="font-mono-tech text-xs uppercase tracking-widest text-[var(--text-muted)]">Design System Matrix</span>
+      <span class="font-mono text-xs uppercase tracking-widest text-content-muted">Design System Matrix</span>
       <h2 class="text-2xl font-semibold tracking-tight mt-1">Color Tokens, Typography & Components</h2>
     </div>
 
-    <!-- Color Swatches -->
+    <!-- Color Swatches.
+         Each swatch MUST render the real token and use its real name, so it can never drift:
+         <div class="rounded-md bg-surface shadow-card p-3">
+           <div class="h-10 rounded-xs border border-border-default mb-2" style="background: var(--accent-primary)"></div>
+           <p class="font-mono text-xs font-medium">--accent-primary</p>
+           <p class="font-mono text-[11px] text-content-muted">#000000 / #0285f7</p>   (light / dark)
+         </div>
+         Never hardcode a hex in the swatch background, and never invent token names. -->
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-10">
       {{COLOR_SWATCHES_HTML}}
     </div>
@@ -74,9 +123,36 @@
   </section>
 
   <script>
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
+    (function () {
+      var root = document.documentElement;
+
+      // Theme toggle (any element with [data-theme-toggle]); persists the choice.
+      var timer;
+      function setTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        root.classList.toggle('dark', theme === 'dark');
+        document.querySelectorAll('[data-theme-toggle][role="switch"]').forEach(function (el) {
+          el.setAttribute('aria-checked', String(theme === 'dark'));
+        });
+      }
+      setTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+      document.querySelectorAll('[data-theme-toggle]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          root.classList.add('theme-switching');
+          clearTimeout(timer);
+          timer = setTimeout(function () { root.classList.remove('theme-switching'); }, 350);
+          setTheme(next);
+          try { localStorage.setItem('preview-theme', next); } catch (e) {}
+        });
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+
+      // Interactions for the replica (tabs, switches, sortable lists, etc.).
+      // Implement every behavior the visible text promises — see BEHAVIOR CONTRACT.
+      {{INTERACTIONS_JS}}
+    })();
   </script>
 </body>
 </html>

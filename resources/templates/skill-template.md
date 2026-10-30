@@ -29,7 +29,9 @@ Mathematically extracted from the reference pixels and computed styles:
 - **Chart / Data 2:** `{{CHART_2}}`
 - **Chart / Data 3:** `{{CHART_3}}`
 - **Chart / Data 4:** `{{CHART_4}}`
-- **Status (Success / Warning / Danger):** `{{STATUS_SUCCESS}}` / `{{STATUS_WARNING}}` / `{{STATUS_DANGER}}`
+- **Chart / Data 5:** `{{CHART_5}}`
+- **Status (Success / Warning / Danger / Info):** `{{STATUS_SUCCESS}}` / `{{STATUS_WARNING}}` / `{{STATUS_DANGER}}` / `{{STATUS_INFO}}`
+- **Themes:** {{THEME_MODES}} (e.g., "Light only", or "Light + Dark via `data-theme`, values listed as light / dark")
 
 ---
 
@@ -73,10 +75,17 @@ See [`resources/components.md`](./resources/components.md) for full HTML + Tailw
 
 ### Do:
 - [x] Keep the generated interface 100% white-label and contextualized to the user's domain, without self-referencing the skill.
+- [x] Give every interactive element a visible `focus-visible` state using `--border-focus`.
+- [x] Use real controls (`<button>`, `<input>`, `role="switch"`/`role="tab"` with synced ARIA state).
+- [x] Tint surfaces with `color-mix(in srgb, var(--token) N%, transparent)`.
+- [x] When the design has two themes, override every color and elevation token in the second theme.
 {{DOS_LIST}}
 
 ### Don't:
 - [ ] NEVER add the skill name or reference website name in copy, status badges, logos, or headers without explicit user instruction.
+- [ ] NEVER use `outline-none` without a visible replacement focus style.
+- [ ] NEVER use opacity modifiers like `bg-status-info/10` on `var()` colors with Tailwind v3 (they silently fail).
+- [ ] NEVER describe behavior (animation, drag, "live", physics values) that the code does not implement.
 {{DONTS_LIST}}
 
 ---
